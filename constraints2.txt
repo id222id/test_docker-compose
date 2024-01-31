@@ -1,0 +1,18 @@
+
+
+#!/bin/bash
+
+# Создаем директорию для хранения контейнеров
+docker create -v /var/lib/docker-containers:/var/lib/docker-containers --name docker-containers
+
+# Создаем директорию для хранения статики Django
+docker create -v /var/www/static:/var/www/static --name static-files
+
+# Создаем контейнер с PostgreSQL
+docker run --name postgresql -e POSTGRES_PASSWORD=password -d postgres:latest
+
+# Создаем контейнер с Django
+docker run --name django -p 8000:8000 --volumes-from docker-containers --volumes-from static-files -d django:latest python manage.py runserver 0.0.0.0:8000
+
+# Создаем контейнер с Nginx
+docker run --name nginx -p 80:80 --volumes-from docker-containers --volumes-from static-files -d nginx:latest

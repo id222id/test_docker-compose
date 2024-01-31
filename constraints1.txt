@@ -1,0 +1,32 @@
+
+
+#!/bin/bash
+
+# Создаем директорию для сборки контейнера
+docker_dir="docker_build"
+mkdir $docker_dir
+cd $docker_dir
+
+# Создаем Dockerfile с нужными инструкциями сборки
+cat > Dockerfile << EOF
+FROM python:3.7-alpine3.9
+RUN apk update && apk add postgresql-dev gcc python3-dev musl-dev libffi-dev openssl-dev make git && pip install --upgrade pip && pip install django gunicorn psycopg2 nginx uwsgi uwsgi-http && mkdir /app && mkdir /etc/nginx/sites-enabled/ && mkdir /run/nginx/ && rm -rf /var/cache/apk/* 
+WORKDIR /app 
+EXPOSE 8080 
+CMD ["uwsgi", "--ini", "/app/uwsgi.ini"] 
+EOF
+
+ # Создаем uwsgi.ini, который будет использоваться nginx'ом, чтобы связать Django приложение с nginx'ом  
+cat > uwsgi.ini << EOF  
+[uwsgi]  
+chdir = /app  
+module = mysite.wsgi:application  
+master = true  
+processes = 5  
+socket = :8080  
+vacuum = true  
+die-on-term = true  
+
+EOF
+
+ # Создаем nginx config, чтобы nginx'у было известно, какую Django app'

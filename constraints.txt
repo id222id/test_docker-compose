@@ -1,0 +1,34 @@
+
+
+---
+
+# Postgresql
+
+services:
+  postgres:
+    image: postgres:latest
+    environment: 
+      - POSTGRES_USER=postgres_user 
+      - POSTGRES_PASSWORD=postgres_password 
+      - POSTGRES_DB=postgres_db 
+    ports: 
+      - 5432:5432
+
+ # Django
+
+ services: 
+   webapp: 
+     build: .  # путь до Dockerfile в проекте. Например, ./webapp/Dockerfile.dev.yml.  
+     command: python manage.py runserver 0.0.0.0:8000 # запускаем Django-приложение на 8000-м порту  
+     volumes: # монтируем volume, чтобы Django-код был доступен извне  
+       - .:/code   # . - это корневая директория, /code - директория, внутрь которой volume "вставляется"  
+
+     ports: # "публикуем" 8000-й port, чтобы Django-приложение "слушало" http-запросы  
+       - 8000:8000  
+
+     depends_on: # webapp "должна" (depends on) postgresql-сервис (для этого webapp "должна" (depends on) postgresql-сервис)  
+       - postgres
+
+ # Nginx
+
+ services:
